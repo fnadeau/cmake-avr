@@ -16,3 +16,11 @@ void initPort(void);
  */
 void togglePin(void);
 
+/**
+ * \brief external library function to calculate the sine of a value
+ * This function is provided by an external library.
+ *
+ * \param x The value for which the sine is calculated.
+ * \return The sine of the value x.
+ */
+double externalLibFunctionSin(double x);

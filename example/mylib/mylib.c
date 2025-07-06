@@ -5,6 +5,7 @@
  * \author Matthias Kleemann
  */
 
+#include <math.h>
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -31,3 +32,8 @@ void togglePin(void)
    _delay_ms(250);
 }
 
+double externalLibFunctionSin(double x)
+{
+    // use the sine function from the math library
+    return sin(x);
+}

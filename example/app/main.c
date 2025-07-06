@@ -20,6 +20,9 @@ int main(void)
 
    DDRB |= someBinVar;
 
+   double x __attribute__((unused));
+   x = externalLibFunctionSin(0.5);
+
    initPort();
 
    while(1)

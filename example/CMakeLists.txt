@@ -133,11 +133,6 @@ add_definitions("-c")
 add_definitions("-std=gnu99")
 
 ##########################################################################
-# include search paths
-##########################################################################
-include_directories(${AVR-EXAMPLE_SOURCE_DIR}/mylib)
-
-##########################################################################
 # building library and application in their subdirectories
 ##########################################################################
 add_subdirectory(mylib)

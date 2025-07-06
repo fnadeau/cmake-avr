@@ -273,14 +273,33 @@ endfunction(add_avr_executable)
 # target_link_libraries(...).
 ##########################################################################
 function(add_avr_library LIBRARY_NAME)
-    if(NOT ARGN)
-        message(FATAL_ERROR "No source files given for ${LIBRARY_NAME}.")
-    endif(NOT ARGN)
+    set(options "")
+    set(oneValueArgs "")
+    set(multiValueArgs SOURCES LIBS INCLUDE_DIRS)
+
+    cmake_parse_arguments(arg_add_avr_library "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(arg_add_avr_library_UNPARSED_ARGUMENTS)
+       message(DEPRECATION "Update code to use SOURCES instead of unparsed arguments.")
+       list(APPEND arg_add_avr_library_SOURCES ${arg_add_avr_library_UNPARSED_ARGUMENTS})
+    endif()
 
     set(lib_file ${LIBRARY_NAME}${MCU_TYPE_FOR_FILENAME})
     set (${LIBRARY_NAME}_LIB_TARGET ${elf_file} PARENT_SCOPE)
 
-    add_library(${lib_file} STATIC ${ARGN})
+    add_library(${lib_file} STATIC ${arg_add_avr_library_SOURCES})
+
+    if(arg_add_avr_library_LIBS)
+       target_link_libraries(${lib_file} ${arg_add_avr_library_LIBS})
+    endif(arg_add_avr_library_LIBS)
+
+    if(arg_add_avr_library_INCLUDE_DIRS)
+       foreach(INCLUDE_DIR ${arg_add_avr_library_INCLUDE_DIRS})
+          if(NOT INCLUDE_DIR STREQUAL "")
+             target_include_directories(${lib_file} PUBLIC ${INCLUDE_DIR})
+          endif(NOT INCLUDE_DIR STREQUAL "")
+       endforeach(INCLUDE_DIR ${arg_add_avr_library_INCLUDE_DIRS})
+    endif(arg_add_avr_library_INCLUDE_DIRS)
 
     set_target_properties(
             ${lib_file}
@@ -373,7 +392,7 @@ function(avr_generate_fixed_targets)
       ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT} -n -v
       COMMENT "Get status from ${AVR_MCU}"
    )
-   
+
    # get fuses
    add_custom_target(
       get_fuses
@@ -382,7 +401,7 @@ function(avr_generate_fixed_targets)
          -U hfuse:r:-:b
       COMMENT "Get fuses from ${AVR_MCU}"
    )
-   
+
    # set fuses
    add_custom_target(
       set_fuses
@@ -391,7 +410,7 @@ function(avr_generate_fixed_targets)
          -U hfuse:w:${AVR_H_FUSE}:m
          COMMENT "Setup: High Fuse: ${AVR_H_FUSE} Low Fuse: ${AVR_L_FUSE}"
    )
-   
+
    # get oscillator calibration
    add_custom_target(
       get_calibration
@@ -399,7 +418,7 @@ function(avr_generate_fixed_targets)
          -U calibration:r:${AVR_MCU}_calib.tmp:r
          COMMENT "Write calibration status of internal oscillator to ${AVR_MCU}_calib.tmp."
    )
-   
+
    # set oscillator calibration
    add_custom_target(
       set_calibration

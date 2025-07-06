@@ -9,9 +9,12 @@
 # Matthias Kleemann
 ##########################################################################
 
+find_library(M_LIB m)
+message(STATUS "avr-libm: ${M_LIB}")
+
 add_avr_library(
    mylib
-   mylib.c 
-   mylib.h
+   SOURCES mylib.c mylib.h
+   INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+   LIBS ${M_LIB}
 )
-
