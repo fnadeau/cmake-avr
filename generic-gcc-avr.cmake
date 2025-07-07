@@ -121,23 +121,17 @@ endif()
 # - Debug
 # - Release
 # - RelWithDebInfo
+# - MinSizeRel
 #
 # Release is chosen, because of some optimized functions in the
 # AVR toolchain, e.g. _delay_ms().
 ##########################################################################
-if(NOT ((CMAKE_BUILD_TYPE MATCHES Release) OR
-(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo) OR
-(CMAKE_BUILD_TYPE MATCHES Debug) OR
-(CMAKE_BUILD_TYPE MATCHES MinSizeRel)))
-    set(
-            CMAKE_BUILD_TYPE Release
-            CACHE STRING "Choose cmake build type: Debug Release RelWithDebInfo MinSizeRel"
-            FORCE
-    )
-endif(NOT ((CMAKE_BUILD_TYPE MATCHES Release) OR
-(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo) OR
-(CMAKE_BUILD_TYPE MATCHES Debug) OR
-(CMAKE_BUILD_TYPE MATCHES MinSizeRel)))
+set(VALID_BUILD_TYPES Debug Release RelWithDebInfo MinSizeRel)
+if(NOT CMAKE_BUILD_TYPE IN_LIST VALID_BUILD_TYPES)
+    set(CMAKE_BUILD_TYPE Release
+        CACHE STRING "Choose cmake build type: Debug Release RelWithDebInfo MinSizeRel"
+        FORCE)
+endif()
 
 ##########################################################################
 # set compiler options for build types
