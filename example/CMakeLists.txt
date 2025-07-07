@@ -11,6 +11,14 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+macro(default_env_value varname default_value)
+    if(NOT DEFINED ENV{${varname}})
+        set(${varname} "${default_value}")
+    else()
+        set(${varname} "$ENV{${varname}}")
+    endif()
+endmacro()
+
 ### TOOLCHAIN SETUP AREA #################################################
 # Set any variables used in the toolchain prior project() call. In that
 # case they are already set and used.
@@ -19,14 +27,14 @@ cmake_minimum_required(VERSION 3.10)
 ##########################################################################
 # tools to beused for programming the AVR
 ##########################################################################
-set(AVR_UPLOADTOOL avrdude)
-set(AVR_PROGRAMMER avrispmkII)
-set(AVR_UPLOADTOOL_PORT usb)
+default_env_value(AVR_UPLOADTOOL "avrdude")
+default_env_value(AVR_PROGRAMMER "avrispmkII")
+default_env_value(AVR_UPLOADTOOL_PORT "usb")
 
 ##########################################################################
 # AVR and fuses needs to be set
 ##########################################################################
-set(AVR_MCU atmega16)
+default_env_value(AVR_MCU "atmega16")
 set(AVR_H_FUSE 0xd9)
 set(AVR_L_FUSE 0xc3)
 
@@ -69,8 +77,6 @@ message(STATUS "Current L_FUSE is set to: ${AVR_L_FUSE}")
 # status messages for generating
 ##########################################################################
 message(STATUS "Set CMAKE_FIND_ROOT_PATH to ${CMAKE_FIND_ROOT_PATH}")
-message(STATUS "Set CMAKE_SYSTEM_INCLUDE_PATH to ${CMAKE_SYSTEM_INCLUDE_PATH}")
-message(STATUS "Set CMAKE_SYSTEM_LIBRARY_PATH to ${CMAKE_SYSTEM_LIBRARY_PATH}")
 
 ##########################################################################
 # compiler options for all build types

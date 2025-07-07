@@ -18,7 +18,11 @@ int main(void)
    /* test the GNU __extension__ with -pedantic settings */
    uint8_t someBinVar = __extension__ 0b01011010;
 
+#ifdef __AVR_ATxmega128A1__
+   PORTQ.DIRSET = someBinVar;
+#else
    DDRB |= someBinVar;
+#endif
 
    double x __attribute__((unused));
    x = externalLibFunctionSin(0.5);

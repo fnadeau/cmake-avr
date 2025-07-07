@@ -56,8 +56,6 @@ message(STATUS "Current L_FUSE is set to: ${AVR_L_FUSE}")
 # status messages for generating
 ##########################################################################
 message(STATUS "Set CMAKE_FIND_ROOT_PATH to ${CMAKE_FIND_ROOT_PATH}")
-message(STATUS "Set CMAKE_SYSTEM_INCLUDE_PATH to ${CMAKE_SYSTEM_INCLUDE_PATH}")
-message(STATUS "Set CMAKE_SYSTEM_LIBRARY_PATH to ${CMAKE_SYSTEM_LIBRARY_PATH}")
 
 ##########################################################################
 # compiler options for all build types

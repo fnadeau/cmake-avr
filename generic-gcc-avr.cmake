@@ -116,6 +116,14 @@ if(AVR_UPLOADTOOL_BAUDRATE)
     set(AVR_UPLOADTOOL_BASE_OPTIONS ${AVR_UPLOADTOOL_BASE_OPTIONS} -b ${AVR_UPLOADTOOL_BAUDRATE})
 endif()
 
+# Get multilib
+execute_process(
+    COMMAND ${AVR_CC} -mmcu=${AVR_MCU} -print-multi-directory
+    OUTPUT_VARIABLE AVR_MULTILIB_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+message(STATUS "AVR multilib path: ${AVR_MULTILIB_PATH}")
+
 ##########################################################################
 # check build types:
 # - Debug
@@ -179,10 +187,6 @@ endif(DEFINED ENV{AVR_FIND_ROOT_PATH})
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-# not added automatically, since CMAKE_SYSTEM_NAME is "generic"
-set(CMAKE_SYSTEM_INCLUDE_PATH "${CMAKE_FIND_ROOT_PATH}/include")
-set(CMAKE_SYSTEM_LIBRARY_PATH "${CMAKE_FIND_ROOT_PATH}/lib")
 
 ##########################################################################
 # target file name add-on
@@ -469,6 +473,23 @@ function(avr_generate_fixed_targets)
          COMMENT "Program calibration status of internal oscillator from ${AVR_MCU}_calib.hex."
    )
 endfunction()
+
+function(avr_find_library LIBRARY_NAME)
+   # find library in the AVR multilib path
+   find_library(
+      ${LIBRARY_NAME}_LIBRARY
+      NAMES ${LIBRARY_NAME}
+      HINTS ${CMAKE_FIND_ROOT_PATH}/lib/${AVR_MULTILIB_PATH}
+      PATH_SUFFIXES avr
+   )
+
+   if(NOT ${LIBRARY_NAME}_LIBRARY)
+      message(FATAL_ERROR "Library ${LIBRARY_NAME} not found in ${CMAKE_FIND_ROOT_PATH}/lib/${AVR_MULTILIB_PATH}.")
+   endif(NOT ${LIBRARY_NAME}_LIBRARY)
+
+   set(${LIBRARY_NAME}_LIB ${${LIBRARY_NAME}_LIBRARY} PARENT_SCOPE)
+   message(STATUS "Found AVR library ${LIBRARY_NAME}: ${${LIBRARY_NAME}_LIBRARY}")
+endfunction(avr_find_library LIBRARY_NAME)
 
 ##########################################################################
 # Bypass the link step in CMake's "compiler sanity test" check
