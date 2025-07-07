@@ -1,3 +1,8 @@
+#ifndef MYLIB_H
+#define MYLIB_H
+
+#include <stdint.h>
+
 /**
  * \brief Header for mylib.
  *
@@ -24,3 +29,16 @@ void togglePin(void);
  * \return The sine of the value x.
  */
 double externalLibFunctionSin(double x);
+
+/**
+ * \brief assembly function to add two integers
+ *
+ * This function is implemented in assembly language and adds two integers.
+ *
+ * \param a The first integer to add.
+ * \param b The second integer to add.
+ * \return The sum of the two integers.
+ */
+uint8_t asmFunction(uint8_t a, uint8_t b);
+
+#endif // MYLIB_H

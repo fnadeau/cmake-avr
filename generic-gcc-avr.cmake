@@ -47,6 +47,7 @@ find_program(AVR_OBJDUMP avr-objdump REQUIRED)
 ##########################################################################
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR avr)
+set(CMAKE_ASM_COMPILER ${AVR_CC})
 set(CMAKE_C_COMPILER ${AVR_CC})
 set(CMAKE_CXX_COMPILER ${AVR_CXX})
 
@@ -138,9 +139,56 @@ endif(NOT ((CMAKE_BUILD_TYPE MATCHES Release) OR
 (CMAKE_BUILD_TYPE MATCHES Debug) OR
 (CMAKE_BUILD_TYPE MATCHES MinSizeRel)))
 
+##########################################################################
+# set compiler options for build types
+##########################################################################
 
+set(CMAKE_ASM_FLAGS "-mmcu=${AVR_MCU} -DF_CPU=${MCU_SPEED}")
+set(CMAKE_C_FLAGS   "-mmcu=${AVR_MCU} -DF_CPU=${MCU_SPEED}UL -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -Wstrict-prototypes")
+set(CMAKE_CXX_FLAGS "-mmcu=${AVR_MCU} -DF_CPU=${MCU_SPEED}UL -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fno-exceptions -Wall -Wundef")
+set(CMAKE_EXE_LINKER_FLAGS "-mmcu=${AVR_MCU}")
+
+set(CMAKE_C_FLAGS_RELEASE "-Os -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-Os -DNDEBUG")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-Wl,--gc-sections -flto")
+
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELEASE} -save-temps -g -gdwarf-3 -gstrict-dwarf")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -save-temps -g -gdwarf-3 -gstrict-dwarf")
+set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "-Wl,--gc-sections")
+
+set(CMAKE_C_FLAGS_DEBUG "-O0 -save-temps -g -gdwarf-3 -gstrict-dwarf")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -save-temps -g -gdwarf-3 -gstrict-dwarf")
+
+set(CMAKE_C_FLAGS_MINSIZEREL "-Os -ffunction-sections -fdata-sections")
+set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -ffunction-sections -fdata-sections")
+set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "-Wl,--gc-sections")
 
 ##########################################################################
+# Cross-compilation configuration
+##########################################################################
+if(DEFINED ENV{AVR_FIND_ROOT_PATH})
+    set(CMAKE_FIND_ROOT_PATH $ENV{AVR_FIND_ROOT_PATH})
+else(DEFINED ENV{AVR_FIND_ROOT_PATH})
+    if(EXISTS "/opt/local/avr")
+      set(CMAKE_FIND_ROOT_PATH "/opt/local/avr")
+    elseif(EXISTS "/usr/avr")
+      set(CMAKE_FIND_ROOT_PATH "/usr/avr")
+    elseif(EXISTS "/usr/lib/avr")
+      set(CMAKE_FIND_ROOT_PATH "/usr/lib/avr")
+    elseif(EXISTS "/usr/local/CrossPack-AVR")
+      set(CMAKE_FIND_ROOT_PATH "/usr/local/CrossPack-AVR")
+    else(EXISTS "/opt/local/avr")
+      message(FATAL_ERROR "Please set AVR_FIND_ROOT_PATH in your environment.")
+    endif(EXISTS "/opt/local/avr")
+endif(DEFINED ENV{AVR_FIND_ROOT_PATH})
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+# not added automatically, since CMAKE_SYSTEM_NAME is "generic"
+set(CMAKE_SYSTEM_INCLUDE_PATH "${CMAKE_FIND_ROOT_PATH}/include")
+set(CMAKE_SYSTEM_LIBRARY_PATH "${CMAKE_FIND_ROOT_PATH}/lib")
 
 ##########################################################################
 # target file name add-on
@@ -178,14 +226,15 @@ function(add_avr_executable EXECUTABLE_NAME)
    set (${EXECUTABLE_NAME}_LST_TARGET ${lst_file} PARENT_SCOPE)
    set (${EXECUTABLE_NAME}_MAP_TARGET ${map_file} PARENT_SCOPE)
    set (${EXECUTABLE_NAME}_EEPROM_TARGET ${eeprom_file} PARENT_SCOPE)
+   
    # elf file
    add_executable(${elf_file} EXCLUDE_FROM_ALL ${ARGN})
-
-   set_target_properties(
+   
+   # map file
+   target_link_options(
       ${elf_file}
-      PROPERTIES
-         COMPILE_FLAGS "-mmcu=${AVR_MCU}"
-         LINK_FLAGS "-mmcu=${AVR_MCU} -Wl,--gc-sections -mrelax -Wl,-Map,${map_file}"
+      PRIVATE
+         -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${map_file}
    )
 
    add_custom_command(
@@ -304,7 +353,6 @@ function(add_avr_library LIBRARY_NAME)
     set_target_properties(
             ${lib_file}
             PROPERTIES
-            COMPILE_FLAGS "-mmcu=${AVR_MCU}"
             OUTPUT_NAME "${lib_file}"
     )
 

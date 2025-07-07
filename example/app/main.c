@@ -23,6 +23,9 @@ int main(void)
    double x __attribute__((unused));
    x = externalLibFunctionSin(0.5);
 
+   uint8_t y __attribute__((unused));
+   y = asmFunction(5, 10);
+
    initPort();
 
    while(1)
