@@ -97,6 +97,8 @@ add_subdirectory(app)
 # add_avr_executable(test_breaks_generation)
 # add_avr_library(mytestlib_breaks_generation)
 
+avr_generate_fixed_targets()
+
 ##########################################################################
 # use default documentation target
 ##########################################################################

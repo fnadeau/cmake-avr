@@ -14,10 +14,6 @@
 #
 # AVR_MCU (default: atmega8)
 #     the type of AVR the application is built for
-# AVR_L_FUSE (NO DEFAULT)
-#     the LOW fuse value for the MCU used
-# AVR_H_FUSE (NO DEFAULT)
-#     the HIGH fuse value for the MCU used
 # AVR_UPLOADTOOL (default: avrdude)
 #     the application used to upload to the MCU
 #     NOTE: The toolchain is currently quite specific about
@@ -26,6 +22,21 @@
 #     the port used for the upload tool, e.g. usb
 # AVR_PROGRAMMER (default: avrispmkII)
 #     the programmer hardware used, e.g. avrispmkII
+#
+# Depending on the AVR_MCU, the fuses need to be set:
+# AVR_L_FUSE (NO DEFAULT)
+#     the LOW fuse value for the MCU used
+# AVR_H_FUSE (NO DEFAULT)
+#     the HIGH fuse value for the MCU used
+# AVR_E_FUSE (NO DEFAULT)
+#     the Extended fuse value for the MCU used (not all MCUs have it)
+# or
+# AVR_FUSE0 (NO DEFAULT)
+# AVR_FUSE1 (NO DEFAULT)
+# AVR_FUSE2 (NO DEFAULT)
+# AVR_FUSE4 (NO DEFAULT)
+# AVR_FUSE5 (NO DEFAULT)
+#
 ##########################################################################
 
 ##########################################################################
@@ -439,23 +450,72 @@ function(avr_generate_fixed_targets)
       COMMENT "Get status from ${AVR_MCU}"
    )
 
-   # get fuses
-   add_custom_target(
-      get_fuses
-      ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT} -n
-         -U lfuse:r:-:b
-         -U hfuse:r:-:b
-      COMMENT "Get fuses from ${AVR_MCU}"
-   )
+   if("${AVR_MULTILIB_PATH}" MATCHES "^avrxmega")
+      # get fuses
+      add_custom_target(
+         get_fuses
+         ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT} -n
+            -U fuse0:r:-:b
+            -U fuse1:r:-:b
+            -U fuse2:r:-:b
+            -U fuse4:r:-:b
+            -U fuse5:r:-:b
+         COMMENT "Get fuses from ${AVR_MCU}"
+      )
 
-   # set fuses
-   add_custom_target(
-      set_fuses
-      ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT}
-         -U lfuse:w:${AVR_L_FUSE}:m
-         -U hfuse:w:${AVR_H_FUSE}:m
-         COMMENT "Setup: High Fuse: ${AVR_H_FUSE} Low Fuse: ${AVR_L_FUSE}"
-   )
+      # set fuses
+      add_custom_target(
+         set_fuses
+         ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT}
+            -U fuse0:w:${AVR_FUSE0}:m
+            -U fuse1:w:${AVR_FUSE1}:m
+            -U fuse2:w:${AVR_FUSE2}:m
+            -U fuse4:w:${AVR_FUSE4}:m
+            -U fuse6:w:${AVR_FUSE6}:m
+            COMMENT "Setup: Fuse0: ${AVR_FUSE0} Fuse1: ${AVR_FUSE1} Fuse2: ${AVR_FUSE2} Fuse4: ${AVR_FUSE4} Fuse6: ${AVR_FUSE6}"
+      )
+   # List was computed from following command:
+   # for i in $(grep -li EFUSE_DEFAULT /usr/avr/include/avr/*); do tmp=${i/\/usr\/avr\/include\/avr\/iox/atxmega}; tmp=${tmp/\/usr\/avr\/include\/avr\/iotn/attiny}; tmp=${tmp/\/usr\/avr\/include\/avr\/iom/atmega}; tmp=${tmp/\/usr\/avr\/include\/avr\/ioavr/avr}; tmp=${tmp/\/usr\/avr\/include\/avr\/iousb/at90usb}; tmp=${tmp/\/usr\/avr\/include\/avr\/ioa/ata}; tmp=${tmp/\/usr\/avr\/include\/avr\/iocan/at90can}; tmp=${tmp/\/usr\/avr\/include\/avr\/io90/at90}; echo ${tmp%.h}; done | sort | uniq
+   # From there, chatGPT suggested a regex and I obviosly had to validate and fixed it with regex101.com
+   elseif("${AVR_MULTILIB_PATH}" MATCHES "^(at90(can(128|32|64)|pwm(1|216|2b|316|3b|81|x)|scr100|usb(1286|1287|162|646|647|82))|ata66(12c|13c|14q|16c|17c|4251)|atmega(128(4(p|rfr2)?|0|1|rfa1|rfr2)?|162|164|16(u[24]|m1)?|256(0|1|4rfr2|rfr2)?|324(p(a|b)?|)?|32(5(0)?|8(pb?)?|9(0)?)|32(c1|m1|u[246])|16(u[24]|m1)?|64(0|4(a|p|pa|rfr2)?|5(0)?|9(0|p)?|c1|m1|rfr2)?|88(pa?|pb)?|8u2|48(pb)?|169(pa?|p)?|165p?|168(pb?)?|48p?|165|3290?)|attiny(16(7)?|2313(a)?|24(a)?|25|261(a)?|4313|43u|44(1|a)?|45|461(a)?|48|84(1|a)?|85|861(a)?|87|88))$")
+      # get fuses
+      add_custom_target(
+         get_fuses
+         ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT} -n
+            -U lfuse:r:-:b
+            -U hfuse:r:-:b
+            -U efuse:r:-:b
+         COMMENT "Get fuses from ${AVR_MCU}"
+      )
+
+      # set fuses
+      add_custom_target(
+         set_fuses
+         ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT}
+            -U lfuse:w:${AVR_L_FUSE}:m
+            -U hfuse:w:${AVR_H_FUSE}:m
+            -U efuse:w:${AVR_E_FUSE}:m
+            COMMENT "Setup: High Fuse: ${AVR_H_FUSE} Low Fuse: ${AVR_L_FUSE} Ext Fuse: ${AVR_E_FUSE}"
+      )
+   else()
+      # get fuses
+      add_custom_target(
+         get_fuses
+         ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT} -n
+            -U lfuse:r:-:b
+            -U hfuse:r:-:b
+         COMMENT "Get fuses from ${AVR_MCU}"
+      )
+
+      # set fuses
+      add_custom_target(
+         set_fuses
+         ${AVR_UPLOADTOOL} ${AVR_UPLOADTOOL_BASE_OPTIONS} -P ${AVR_UPLOADTOOL_PORT}
+            -U lfuse:w:${AVR_L_FUSE}:m
+            -U hfuse:w:${AVR_H_FUSE}:m
+            COMMENT "Setup: High Fuse: ${AVR_H_FUSE} Low Fuse: ${AVR_L_FUSE}"
+      )
+   endif()
 
    # get oscillator calibration
    add_custom_target(
