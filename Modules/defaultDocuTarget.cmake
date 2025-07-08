@@ -5,6 +5,10 @@
 ##################################################################################
 # find doxygen
 ##################################################################################
+if (POLICY CMP0109)
+  cmake_policy(SET CMP0109 NEW)
+endif()
+
 find_package(Doxygen)
 
 ##################################################################################
@@ -12,17 +16,16 @@ find_package(Doxygen)
 ##################################################################################
 if(DOXYGEN_FOUND)
    if(NOT DOXYGEN_CONF_IN)
-      # find_file does not work as expected (WinXP, cmake 2.8.10-2.8.12)
-      find_program(conf_file NAMES "doxygen.conf.in" PATHS ${CMAKE_CURRENT_SOURCE_DIR})
+      set (conf_file "${CMAKE_CURRENT_SOURCE_DIR}/doxygen.conf.in")
    else(NOT DOXYGEN_CONF_IN)
       set(conf_file ${DOXYGEN_CONF_IN})
    endif(NOT DOXYGEN_CONF_IN)
 
-   if(NOT conf_file)
+   if(NOT EXISTS "${conf_file}")
       message(WARNING "No doxygen configuration found. Please create
                        '${CMAKE_CURRENT_SOURCE_DIR}/doxygen.conf.in'.
                        No documentation target created.")
-   else(NOT conf_file)
+   else(NOT EXISTS "${conf_file}")
       # configuration input and output
       set(DOXYGEN_CONF_IN ${conf_file})
       set(DOXYGEN_CONF_OUT doxygen.conf)
@@ -58,7 +61,7 @@ if(DOXYGEN_FOUND)
           COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CONF_OUT}
           COMMENT "Create HTML documentation."
       )
-   endif(NOT conf_file)
+   endif(NOT EXISTS "${conf_file}")
 else(DOXYGEN_FOUND)
    message(WARNING "Doxygen not found. Documentation target not created.")
 endif(DOXYGEN_FOUND)
